@@ -13,11 +13,13 @@ Note that the HC-SR04 needs at least 4.5V to work while NodeMCU runs on 3.3V.
 As long as you connect your NodeMCU DevKit on a 5V USB supply, you can make
 the connection like this: 
 
+```
 NodeMCU DevKit       HC-SR04
            Vin <---> Vcc
            Gnd <---> Gnd
             D1 <---> Trig
             D2 <---> Echo
+```
 
 Although this works, I would recomend the use of a __logic level converter__
 just to be a little more safe.
