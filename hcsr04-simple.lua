@@ -16,8 +16,8 @@
 -- along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 -- How to:
--- 	1) upload this script to your nodemcu devkit
---	then, at the serial terminal:
+--  1) upload this script to your nodemcu devkit
+--  then, at the serial terminal:
 --  2) dofile("hcsr04-simple.lua")
 --  3) measure()
 
@@ -49,7 +49,7 @@ end
 
 -- called when measure is done
 function done_measuring()
-	print("Distance: "..distance.." Readings: "..#readings)
+	print("Distance: "..string.format("%.3f", distance).." Readings: "..#readings)
 	if CONTINUOUS then
 		node.task.post(measure)
 	end
