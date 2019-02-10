@@ -19,7 +19,7 @@
 --  1) upload this script to your nodemcu devkit
 --  then, at the serial terminal:
 --  2) dofile("hcsr04.lua")
---  3) h = HCSR04(1, 2, 25, 3)
+--  3) h = HCSR04(3, 4, 5, 4, 3)
 --  4) h.measure()
 
 -- for continuous measuring, just do self.continuous = true
@@ -66,6 +66,8 @@ function HCSR04(trig_pin, echo_pin, temp_pin, max_distance, avg_readings, measur
 
 	-- speed of sound at 20°
 	local speed_of_sound = 343.46
+	-- default room temp
+	local temp = 22
 
 	-- maximum distance that will be measured
 	local maximum_distance = math.max(25, max_distance)
@@ -119,31 +121,32 @@ function HCSR04(trig_pin, echo_pin, temp_pin, max_distance, avg_readings, measur
 		clean_distance = clean_distance / #clean_readings
 	end
 
-
-	function self.get_temperature()
-		status, temp, humi, temp_dec, humi_dec = dht.read(pin)
+	-- set room temperature 
+	function self.set_temperature(temp_pin)
+		status, temp, humi, temp_dec, humi_dec = dht.read(temp_pin)
 		if status == dht.OK then
-			return temp		
+			self.temp = temp
 		elseif status == dht.ERROR_CHECKSUM then
 			print( "DHT Checksum error." )
 		elseif status == dht.ERROR_TIMEOUT then
 			print( "DHT timed out." )
 		end
 
+	end
 
-	function self.set_velocity_of_sound(temp)
+	-- set spped of sound depending on room temp
+	function self.set_velocity_of_sound()
 		--- 331.5 velocity at 0 degresse
 		--- 0.604 is the factor 
 		speed_of_sound = (temp * 0.604) + 331.50
+	end
 
 	-- distance calculation, called by the echo_callback function on falling edge.
 	function self.calculate()
 
 		-- echo time (or high level time) in seconds
 		local echo_time = (echo_stop - echo_start) / 1000000
-		local temp = self.get_temperature()
 		self.set_velocity_of_sound(temp)
-
 		-- got a valid reading
 		if echo_time > 0 then
 			-- distance = echo time (or high level time) in seconds * velocity of sound (340M/S) / 2
@@ -194,11 +197,18 @@ function HCSR04(trig_pin, echo_pin, temp_pin, max_distance, avg_readings, measur
 	gpio.mode(trig_pin, gpio.OUTPUT)
 	gpio.mode(echo_pin, gpio.INT)
 
+	-- set velocity of sound depending on room temp
+	self.set_temperature(temp_pin)
+	self.set_velocity_of_sound()
+
 	-- trigger timer
 	tmr.register(trigger_timer_id, reading_interval, tmr.ALARM_AUTO, self.trigger)
 
 	-- set callback function to be called both on rising and falling edges
 	gpio.trig(echo_pin, "both", self.echo_callback)
+
+
+
 
 	return self
 end
